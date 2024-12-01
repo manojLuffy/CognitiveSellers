@@ -13,16 +13,12 @@ chrome.storage.local.get("facebook", (data) => {
 });
 
 chrome.storage.local.get("facebookUserName", (data) => {
-	console.log("facebookUserName", data?.facebookUserName);
 	facebookUserName = data?.facebookUserName || "";
 });
 
 chrome.storage.local.get("poshmarkUserName", (data) => {
-	console.log("198465", data?.poshmarkUserName);
 	poshmarkUserName = data?.poshmarkUserName || "";
 });
-
-console.log("19645", facebookUserName, poshmarkUserName);
 
 function cleanUrlData(url) {
 	// Parse the URL to extract the query parameters
@@ -67,7 +63,6 @@ chrome.webRequest.onCompleted.addListener(
 // Listen for changes to tabs
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 	if (changeInfo.status === "complete" && tab.url.includes("poshmark.com")) {
-		console.log("tabId876", tabId);
 		// Inject content script if not already injected
 		chrome.tabs.executeScript(tabId, { file: "content.js" }, () => {
 			// Send message to check login status
@@ -76,7 +71,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 	}
 
 	if (changeInfo.status === "complete" && tab.url.includes("facebook.com")) {
-		console.log("tabId876", tabId);
 		// Inject content script if not already injected
 		chrome.tabs.executeScript(tabId, { file: "content.js" }, () => {
 			// Send message to check login status
@@ -133,14 +127,12 @@ async function createTabReady(href, active = false) {
 
 		const tabId = newTab.id;
 
-		console.log("tabId", tabId);
 		tabStatuses[tabId] = false;
 
 		const intervalId = setInterval(async () => {
 			if (!newTab) return;
 
 			let result = await loadAndRemove("tabReady" + newTab.id);
-			console.log("result", result);
 			if (result) {
 				clearInterval(intervalId); // Clear interval when tab is ready
 				tabStatuses[tabId] = true;
@@ -166,15 +158,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
 		const modifiedListingData = updateObjectField(request.listingData);
 
-		console.log("15344", tab);
-
 		const intervalId = setInterval(() => {
 			if (tabStatuses[tab.id]) {
 				const port = chrome.tabs.connect(tab.id);
-				console.log("modifiedListingData143", modifiedListingData);
 				port.postMessage({ action: "fillListingData", data: modifiedListingData, marketplace: marketplace, tab: tab });
 				port.onMessage.addListener((response) => {
-					console.log("Response from content script:", response);
 					if (response?.status) clearInterval(intervalId);
 					// Handle response from content script
 				});
@@ -201,10 +189,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 					port.onMessage.addListener((response) => {
 						if (response.action === "poshmarkClosetURL") {
 							clearInterval(intervalId);
-							console.log("Received closet URL:", response.url);
 							if (response.url) {
-								console.log("Navigating to closet URL:", response.url);
-
 								// 4. Update the tab URL to the closet URL
 								chrome.tabs.update(tab.id, { url: response.url }, () => {
 									// 5. Now that the closet page is loaded,
@@ -212,16 +197,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 									const closetTabIntervalId = setInterval(() => {
 										if (tabStatuses[tab.id]) {
 											const port = chrome.tabs.connect(tab.id);
-											console.log("tab187", tab);
 											port.postMessage({ action: "enterPoshmarkListingSelectionMode" });
 											port.onMessage.addListener((response) => {
 												if (response.action === "poshmarkListingSelectionUIAdded") {
-													console.log("Listings extracted987:", response);
 													clearInterval(closetTabIntervalId);
 												}
 
 												if (response.action === "poshmarkListingsSelectedData") {
-													console.log("10958", response);
 													chrome.tabs.query({ url: urlArray }, (tabs) => {
 														tabs?.forEach((tab) => {
 															chrome.tabs.sendMessage(tab.id, { action: "poshmarkListingsReady", listings: response.listings });
@@ -246,16 +228,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 			if (tab) {
 				// Send a message to the new tab
 				const port = chrome.tabs.connect(tab.id);
-				console.log("port", port);
 				port.postMessage({ action: "poshmarkFeedPageReady", marketplace: marketplace });
 
 				// Listen for response from the new tab
 				port.onMessage.addListener((response) => {
 					if (response.action === "poshmarkClosetURL") {
-						console.log("Received closet URL:", response.url);
 						if (response.url) {
-							console.log("Navigating to closet URL:", response.url);
-
 							// 4. Update the tab URL to the closet URL
 							chrome.tabs.update(tab.id, { url: response.url }, () => {
 								// 5. Now that the closet page is loaded,
@@ -279,28 +257,22 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 			const intervalId = setInterval(() => {
 				if (tabStatuses[tab.id]) {
 					const port = chrome.tabs.connect(tab.id);
-					console.log("port", port);
 					port.postMessage({ action: "extractFacebookListings", marketplace: marketplace });
 					port.onMessage.addListener(async (response) => {
-						console.log("Response from content script165:", response);
 						if (response.action === "facebookListingLinksExtracted") {
 							clearInterval(intervalId);
 
-							console.log("104343", response);
 							const { listingLinks } = response;
-							console.log("Received listing links:1065", listingLinks);
 
 							const listingData = []; // Array to store all extracted listing data
 
 							// Iterate through each listing link
 							for (let i = 0; i < listingLinks.length; i++) {
 								const listingURL = listingLinks[i];
-								console.log("1065", listingLinks);
 								try {
 									// Extract data from the listing page
 									const extractedData = await extractFacebookListingData(listingURL);
 
-									console.log("Extracted data1673:", extractedData);
 									listingData.push(extractedData);
 								} catch (error) {
 									console.error(`Error extracting data for listing ${listingURL}:`, error);
@@ -314,7 +286,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 							});
 							//close marketplace page
 							chrome.tabs.remove(tab.id);
-							console.log("All extracted Facebook listing data:7988", listingData);
 						}
 						// Handle response from content script
 					});
@@ -334,10 +305,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 			const intervalId = setInterval(() => {
 				if (tabStatuses[tab.id]) {
 					const port = chrome.tabs.connect(tab.id);
-					console.log("port", port);
 					port.postMessage({ action: "checkMarketplaceConnectionAndClose", marketplace: marketplace });
 					port.onMessage.addListener((response) => {
-						console.log("Response from content script:", response);
 						if (response) clearInterval(intervalId);
 						// chrome.tabs.remove(tab.id);
 						// Handle response from content script
@@ -355,10 +324,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 			const intervalId = setInterval(() => {
 				if (tabStatuses[tab.id]) {
 					const port = chrome.tabs.connect(tab.id);
-					console.log("port", port);
 					port.postMessage({ action: "checkMarketplaceConnectionAndClose", marketplace: marketplace });
 					port.onMessage.addListener((response) => {
-						console.log("Response from content script:", response);
 						if (response) clearInterval(intervalId);
 						// chrome.tabs.remove(tab.id);
 						// Handle response from content script
@@ -370,7 +337,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
 	if (request.action === "saveAndSendMarketplaceLoginStatus") {
 		let userNameKey = `${request.marketplace}UserName`;
-		console.log("Request received:1543", userNameKey);
 
 		// Store the updated status in storage
 		chrome.storage.local.set({ [request.marketplace]: request.isLoggedIn, [userNameKey]: request.userName });
@@ -387,7 +353,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 	}
 
 	if (request.action === "savePoshmarkUsername") {
-		console.log("09576", request.userName);
 		chrome.storage.local.set({ poshmarkUserName: request.userName || "" });
 		chrome.tabs.query({ url: urlArray }, (tabs) => {
 			tabs.forEach((tab) => {
@@ -406,7 +371,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 	}
 
 	if (request.action === "disconnectMarketplace") {
-		console.log("Request received:1543", request);
 		let userNameKey = `${request.marketplace}UserName`;
 		// Store the updated status in storage
 		chrome.storage.local.set({ [request.marketplace]: false, [userNameKey]: "" });
@@ -424,7 +388,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
 // Function to extract Facebook listing data (using a single tab)
 async function extractFacebookListingData(listingURL) {
-	// console.log("listingURL098", listingURL);
 	return new Promise(async (resolve, reject) => {
 		try {
 			const tab = await createTabReady(listingURL, true);
@@ -434,7 +397,6 @@ async function extractFacebookListingData(listingURL) {
 					const port = chrome.tabs.connect(tab.id);
 					port.postMessage({ action: "extractFacebookListingData", url: listingURL });
 					port.onMessage.addListener((response) => {
-						console.log("Response from content script9088:", response);
 						if (response.action === `facebookListingDataExtractedFor${listingURL}`) {
 							clearInterval(intervalId);
 							resolve(response);
@@ -456,10 +418,8 @@ async function loadAndRemove(name) {
 	if (resolvedTabs.has(tabId)) {
 		return false; // Don't re-resolve if already done
 	}
-	console.log("beforeLoad", name);
 	await save({ [name]: true });
 	const answer = await load(name);
-	console.log("afterLoad", answer);
 	if (answer) {
 		await remove(name);
 		resolvedTabs.add(tabId); // Mark tab as resolved
