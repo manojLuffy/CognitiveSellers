@@ -1,0 +1,41 @@
+{
+	"manifest_version": 2,
+	"name": "Cognition Seller",
+	"version": "1.50",
+	"description": "Crosslisting to marketplaces",
+	"permissions": ["tabs", "storage", "activeTab", "webRequest", "https://poshmark.com/*"],
+	"background": {
+		"scripts": ["background.js"],
+		"persistent": true
+	},
+	"browser_action": {
+		"default_popup": "popup.html",
+		"default_title": "fb_Test"
+	},
+	"content_scripts": [
+		{
+			"matches": [
+				"https://www.facebook.com/*",
+				"https://www.facebook.com/marketplace/create/item",
+				"https://www.facebook.com/marketplace/you/selling",
+				"https://www.facebook.com/marketplace/item/*",
+				"https://www.facebook.com/",
+				"https://poshmark.com/create-listing",
+				"https://poshmark.com/feed",
+				"https://poshmark.com/feed*",
+				"https://poshmark.com/listing/*",
+				"https://poshmark.com/closet/*",
+				"https://poshmark.com/*",
+				"http://192.168.56.1/*",
+				"http://localhost:3000/*",
+				"http://localhost:3000/products",
+				"https://www.cognitionseller.com/listings/*",
+				"https://cognitionseller.com/listings/*",
+				"https://cognitionseller.com/*",
+				"https://www.cognitionseller.com/*"
+			],
+			"js": ["lib/jquery-3.3.1.min.js", "content.js"],
+			"run_at": "document_start"
+		}
+	]
+}
