@@ -2,50 +2,11 @@ function e(text) {
 	console.log(`%c${text}`, "color: blue; font-weight: bold;");
 }
 
-// const shopsLoginStatus = {};
-
-// chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-// 	if (changeInfo.status === "complete" && tab.url.includes("poshmark.com")) {
-// 		// Inject content script on completion
-// 		chrome.tabs.executeScript(tabId, { file: "content.js" });
-// 	}
-// });
-
-// chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-// 	if (request.action === "poshmarkLoginStatus") {
-// 		console.log("Poshmark login status:", request.isPoshmarkLoggedIn);
-// 		shopsLoginStatus.poshmark = request.isPoshmarkLoggedIn;
-// 		// Store the login status in chrome.storage.local
-// 		chrome.storage.local.set({ shopsLoginStatus });
-// 	}
-// 	// ... other message handlers ...
-// });
-
 // Initialize Poshmark connection status from storage
 let poshmarkConnected = false;
 let poshmarkUserName = "";
 let facebookConnected = false;
 let facebookUserName = "";
-
-// Load the connection status from storage on extension start
-// chrome.storage.local.get("poshmark", (data) => {
-// 	console.log("10633", data);
-// 	chrome.tabs.query({ url: "http://localhost:3000/*" }, (tabs) => {
-// 		console.log("19522", tabs);
-// 		// Replace with your website URL pattern
-// 		if (tabs.length > 0) {
-// 			const websiteTabId = tabs[0].id;
-// 			chrome.tabs.sendMessage(websiteTabId, {
-// 				action: "marketPlaceLoginStatus",
-// 				marketplace: "poshmark",
-// 				isLoggedIn: data.poshmark,
-// 			});
-// 			console.log("Message sent to website to retrieve facebook listings.");
-// 		} else {
-// 			console.warn("the operation");
-// 		}
-// 	});
-// });
 
 chrome.storage.local.get("facebook", (data) => {
 	facebookConnected = data?.facebook || false;
@@ -153,66 +114,6 @@ function checkLoginStatus(callback) {
 		callback(data.isLoggedIn);
 	});
 }
-
-const listingData = {
-	title: "test 2",
-	brand: "Chevrolet",
-	description: "23234",
-	media: [
-		"https://cognition-seller.s3.us-east-2.amazonaws.com/product-images/c35528cd19f8bcbc.png",
-		"https://cognition-seller.s3.us-east-2.amazonaws.com/product-images/5789753f06fad420.png",
-	],
-	cogs: {
-		currency: "USD",
-		price: 0,
-	},
-	pricing: {
-		currency: "USD",
-		price: 25,
-	},
-	discounted_pricing: {
-		currency: "USD",
-		price: 0,
-	},
-	is_same_price_for_all: false,
-	inventory: 12,
-	bar_code: "",
-	// sku: "1435222",
-	SKU: "1435454",
-	track_quantity: false,
-	product_status: "active",
-	product_category: "None",
-	market_places: ["etsy"],
-	keywords: ["shirt", "trouser"],
-	side_notes: "dfgdfgdf",
-	user_id: "65f1d142863d4500d08bcc6c",
-	created_at: "2024-03-14T08:33:53.322000",
-	etsy_listing_id: 1696118469,
-	etsy_listing_url: "https://www.etsy.com/listing/1696118469/test-2",
-	ebay_listing_id: "110554740398",
-	ebay_listing_url: "https://www.sandbox.ebay.com/itm/test-2-/110554740398",
-	updated_at: "2024-03-14T11:54:57.028000",
-	id: "65f2b671ab6f4d0a7eaac8f9",
-};
-
-const listingData2 = {
-	id: "65f2b671ab6f4d0a7eaac8f9",
-	title: "test 2",
-	inventory: 12,
-	market_places: ["etsy"],
-	product_status: "active",
-	product_category_name: null,
-	media: [
-		"https://cognition-seller.s3.us-east-2.amazonaws.com/product-images/c35528cd19f8bcbc.png",
-		"https://cognition-seller.s3.us-east-2.amazonaws.com/product-images/5789753f06fad420.png",
-	],
-	product_tags: null,
-	ebay_listing_url: "https://www.sandbox.ebay.com/itm/test-2-/110554740398",
-	etsy_listing_url: "https://www.etsy.com/listing/1696118469/test-2",
-	created_at: "2024-03-14",
-	updated_at: "2024-03-14",
-	deleted_at: null,
-};
 
 const tabStatuses = {};
 const resolvedTabs = new Set();
@@ -329,22 +230,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 													chrome.tabs.remove(tab.id);
 												}
 											});
-											// port.postMessage({ action: "extractPoshmarkListings" });
-											// port.onMessage.addListener((response) => {
-											// 	if (response.action === "listingsExtracted") {
-											// 		console.log("Listings extracted987:", response);
-											// 		listingData123 = response;
-											// 		// chrome.tabs.query({ url: "http://localhost:3000/*" }, (tabs) => {
-											// 		chrome.tabs.query({ url: urlArray }, (tabs) => {
-											// 			tabs?.forEach((tab) => {
-											// 				chrome.tabs.sendMessage(tab.id, { action: "poshmarkListingsReady", listings: response.listingData });
-											// 			});
-											// 		});
-
-											// 		clearInterval(closetTabIntervalId);
-											// 		chrome.tabs.remove(tab.id);
-											// 	}
-											// });
 										}
 									}, 500);
 								});

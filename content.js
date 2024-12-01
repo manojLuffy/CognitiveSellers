@@ -1,40 +1,5 @@
 $(document).ready(async function () {
 	const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-	// const waitForNode = (selector, maxWait, inNode) => {
-	// 	if (!inNode) {
-	// 		if (!document.documentElement) {
-	// 			return new Promise((resolve) => {
-	// 				let interval = setInterval(() => {
-	// 					if (document.documentElement) {
-	// 						clearInterval(interval);
-	// 						resolve(true);
-	// 					}
-	// 				}, 10);
-	// 			}).then(() => waitForNode(selector, maxWait, document.documentElement));
-	// 		}
-	// 		inNode = $(document.documentElement);
-	// 	}
-
-	// 	let maxDate = null;
-	// 	if (maxWait) {
-	// 		maxDate = new Date();
-	// 		maxDate.setSeconds(maxDate.getSeconds() + maxWait);
-	// 	}
-
-	// 	return new Promise((resolve) => {
-	// 		let interval = setInterval(() => {
-	// 			let node = inNode.find(selector);
-	// 			if (node.length > 0) {
-	// 				clearInterval(interval);
-	// 				resolve(node);
-	// 			}
-	// 			if (maxDate && new Date() > maxDate) {
-	// 				clearInterval(interval);
-	// 				resolve(null);
-	// 			}
-	// 		}, 50);
-	// 	});
-	// };
 
 	const waitForNode = async (selector, maxWait, inNode = document.documentElement) => {
 		const startTime = Date.now();
@@ -56,13 +21,10 @@ $(document).ready(async function () {
 
 	// Function to check login status and close the tab
 	async function checkMarketPlaceLoginStatus(marketplace) {
-		console.log("19328", marketplace);
 		if (marketplace === "poshmark") {
 			const imgElement = await waitForNode(".header__account-info__link .dropdown__selector img", 25); // Wait for image
-			console.log("poshmarkFeedPageReady", imgElement);
 			if (imgElement && imgElement.length) {
 				const userName = imgElement.attr("alt"); // Extract username from img alt
-				console.log("username143", userName);
 				if (userName) {
 					chrome.runtime.sendMessage({
 						action: "savePoshmarkUsername",
@@ -80,22 +42,17 @@ $(document).ready(async function () {
 			const usernameDiv = await waitForNode('div[aria-label="Create a post"]', 5);
 
 			let userName;
-			console.log("18567", usernameDiv);
 
 			if (usernameDiv && usernameDiv.length > 0) {
 				// 2. Extract the username from the aria-label
 				const ariaLabel = usernameDiv.find("a").attr("aria-label");
 				const username = ariaLabel?.replace(/'s [tT]imeline/, "").trim();
 				userName = username;
-
-				console.log("19456", username);
 			} else {
 				// Handle case where the div is not found
 				console.warn("Facebook login element not found!");
 				// ... your existing logic for not logged in ...
 			}
-
-			console.log("18567", userName, loginStorageData);
 
 			if (loginStorageData) {
 				chrome.runtime.sendMessage({
@@ -119,17 +76,9 @@ $(document).ready(async function () {
 	window.postMessage({ type: "FROM_EXTENSION", text: "Hello from the extension!" }, "*");
 	// Listen for messages from the website component
 	window.addEventListener("message", (event) => {
-		// We only accept messages from ourselves
-		// if (event.source !== window) return;
-
-		// console.log("Message received from website component:1644", event.data);
-
-		console.log("032", event.data);
-
 		if (event.data.type && event.data.type === "FROM_PAGE") {
 			if (event.data.action === "copyListing") {
 				const { listingId, marketplace, listingData } = event.data;
-				console.log("Copy Listing request received for marketplace:", marketplace, "and listing ID:", listingId);
 
 				// Send a message to the background script to handle copying
 				if (marketplace === "poshmark") {
@@ -150,8 +99,6 @@ $(document).ready(async function () {
 			}
 
 			if (event.data.action === "importPoshmarkListings") {
-				console.log("Import Poshmark listings request received");
-
 				chrome.runtime.sendMessage({
 					action: "importListings",
 					marketplace: "poshmark",
@@ -161,8 +108,6 @@ $(document).ready(async function () {
 			}
 
 			if (event.data.action === "importFacebookListings") {
-				console.log("Import Facebook listings request received");
-
 				chrome.runtime.sendMessage({
 					action: "importListings",
 					marketplace: "facebook",
@@ -397,10 +342,8 @@ $(document).ready(async function () {
 	// Function to autofill the form
 	async function autofillForm(dt, marketplace) {
 		if (autofillInProgress) {
-			console.warn("Autofill is already in progress. Skipping this call.");
 			return;
 		}
-		console.log("Autofill Form called for:", marketplace, autofillInProgress);
 		try {
 			autofillInProgress = true;
 			if (marketplace === "facebook") {
@@ -409,7 +352,6 @@ $(document).ready(async function () {
 					// 'div[role="form"][aria-label]:first:has(input[type="file"]), div[role="form"][aria-label="Marketplace"]'
 					'div[role="form"][aria-label="Marketplace"]'
 				);
-				console.log("Facebook form element:", form);
 
 				if (!form.length) {
 					console.error("Facebook Marketplace listing form not found!");
@@ -423,7 +365,6 @@ $(document).ready(async function () {
 						.join(" ");
 
 					const name2 = name.charAt(0).toUpperCase() + name.slice(1);
-					console.log("Input div286:", name1, name2);
 
 					const selector_1 = await waitForNode(`div:has(>span:contains("${name1}")):first`, 1, form);
 					const selector_2 = await waitForNode(`label:has(span:contains("${name1}"))`, 1, form);
@@ -449,7 +390,6 @@ $(document).ready(async function () {
 
 				async function setValue(name, value) {
 					let div = await getInputDiv(name);
-					console.log("Input div143:", name, div);
 					if (!div) {
 						return;
 					}
@@ -517,8 +457,6 @@ $(document).ready(async function () {
 						// 1. Find the main category dropdown button
 						const categoryDropdownButton = await waitForNode('label[aria-label="Category"]', 5, form);
 
-						console.log("19563", `${dt.facebook_category.sub}`, categoryDropdownButton);
-
 						if (categoryDropdownButton && categoryDropdownButton.length > 0) {
 							// 2. Click the button to open the dropdown
 							categoryDropdownButton.dispatch("click");
@@ -527,14 +465,11 @@ $(document).ready(async function () {
 							// 3. Wait for the "Dropdown menu" div to appear
 							const dropdownMenu = await waitForNode('div[role="dialog"][aria-label="Dropdown menu"]', 5);
 
-							console.log("18743", dropdownMenu);
-
 							if (dropdownMenu) {
 								const subCategoryOption = await waitForNode(`span > div > span:contains("${dt.facebook_category.sub}")`, 5, dropdownMenu);
 								if (subCategoryOption) {
 									// 4. Click the subcategory option
 									subCategoryOption.dispatch("click");
-									console.log("subcategory found", subCategoryOption);
 								} else {
 									console.warn(`Subcategory "${dt.facebook_category.sub}" not found.`);
 								}
@@ -555,24 +490,13 @@ $(document).ready(async function () {
 					await setValue("description", convertHtmlToText(desc));
 				}
 
-				console.log("19522", dt.keywords);
-
 				if (dt.keywords) {
 					let moreDetailsDiv = await getInputDiv("More details");
 					if (moreDetailsDiv) {
 						moreDetailsDiv.dispatch("click");
 						await wait(500);
 					}
-					console.log("keywords", dt.keywords);
 					if (dt.keywords.length > 20) dt.keywords.splice(20);
-					// let ta = await getInputDiv("Product");
-					// let ta2 = await getInputDiv("Product tags");
-					// console.log("tatata", ta, ta2);
-					// if (!ta || !ta[0]) {
-					// 	console.log("ta not found");
-					// 	return;
-					// }
-					// ta = ta.find("textarea") || ta2.find("textarea");
 					const ta = await waitForNode('label[aria-label="Product tags"] textarea', 1, form);
 					if (!ta || !ta[0]) {
 						console.log("ta not found");
@@ -581,7 +505,6 @@ $(document).ready(async function () {
 					ta.dispatch("focusin");
 					ta.dispatch("click");
 					await waitForNode("[role='button']", 1, ta.parent());
-					// console.log("ta143", ta.parent());
 					for (let key of dt.keywords) {
 						ta.val(key).dispatch("input");
 						await wait(10);
@@ -613,7 +536,7 @@ $(document).ready(async function () {
 
 				async function setPoshmarkValue(selector, value, parentNode = $("#content .card--large")) {
 					const element = await waitForNode(selector, 5, parentNode);
-					if (element && element.length && !element.val().trim) {
+					if (element && element.length) {
 						element.val(value);
 						element.dispatch("input");
 						element.dispatch("change");
@@ -624,8 +547,6 @@ $(document).ready(async function () {
 						console.warn(`Poshmark element not found: ${selector}`);
 					}
 				}
-
-				console.log("10722", dt);
 
 				let imageList = [...dt.media];
 				if (imageList.length > 0) {
@@ -665,6 +586,12 @@ $(document).ready(async function () {
 					try {
 						// 1. Find and open the main category dropdown
 						const mainCategoryDropdown = await waitForNode(".listing-editor__category-container .dropdown__selector", 5, cardLarge);
+
+						//check if mainCategoryDropdown div contains span with text of 'Select Category'
+						const mainCategoryDropdownText = mainCategoryDropdown.find("span").text()?.trim();
+						if (mainCategoryDropdownText !== "Select Category") {
+							return;
+						}
 
 						if (mainCategoryDropdown && mainCategoryDropdown.length > 0) {
 							mainCategoryDropdown.dispatch("click"); // Simulate click to open
@@ -871,7 +798,6 @@ $(document).ready(async function () {
 
 	// Function to add checkboxes and "Done Selecting" button
 	async function addPoshmarkListingSelectionUI(handleDoneSelectingAndImportToCognition) {
-		console.log("18743", poshmarkUIAdded);
 		if (poshmarkUIAdded) {
 			return;
 		}
@@ -928,10 +854,8 @@ $(document).ready(async function () {
 
 	// Function to extract data from a single listing page of poshmark
 	async function getPoshmarkListingData(listingURL) {
-		console.log("listingURL 1652", listingURL);
 		const pageHTML = await getHttpResponse(listingURL);
 
-		console.log("pageHTML 1656", pageHTML);
 		const $page = $(pageHTML); // Create a jQuery object for easier DOM manipulation
 
 		// Extract data using jQuery selectors
@@ -970,14 +894,9 @@ $(document).ready(async function () {
 
 	// Listen for messages from the background script
 	chrome.runtime.onConnect.addListener((port) => {
-		console.log("Connected to background script8755", port.sender.id);
-
 		port.onMessage.addListener(async (request) => {
-			console.log("Message received from background");
 			if (request.action === "fillListingData") {
 				const { marketplace, data, tab } = request;
-
-				console.log("18244", tab);
 
 				autofillForm(data, marketplace).then(() => {
 					console.log("Sending response to background: Data processed");
@@ -994,12 +913,9 @@ $(document).ready(async function () {
 				console.log("poshmarkFeedPageReady", imgElement);
 				if (imgElement && imgElement.length) {
 					const username = imgElement.attr("alt"); // Extract username from img alt
-					console.log("username143", username);
 					const closetURL = `https://poshmark.com/closet/${username}`;
-					console.log("Closet URL:", closetURL);
 
 					// Send URL to background script
-					// chrome.runtime.sendMessage({ action: "poshmarkClosetURL", url: closetURL });
 					port.postMessage({ action: "poshmarkClosetURL", url: closetURL });
 				} else {
 					port.postMessage({ action: "poshmarkClosetURL", url: null });
@@ -1017,16 +933,12 @@ $(document).ready(async function () {
 						})
 						.get();
 
-					console.log("Selected Poshmark Listings:", selectedPoshmarkListings);
-
 					let selectedListingsData = [];
 
 					for (const listingURL of selectedPoshmarkListings) {
 						const data = await getPoshmarkListingData(`https://poshmark.com${listingURL}`);
 						selectedListingsData.push(data);
 					}
-
-					console.log("19623", selectedListingsData);
 
 					// Send selected listings to the background script
 					port.postMessage({
@@ -1042,25 +954,20 @@ $(document).ready(async function () {
 			}
 
 			if (request.action === "extractPoshmarkListings") {
-				console.log("Extracting listings...");
 				// ... Add your code here to extract listings from the closet page ...
 				// When you're done extracting, you can send a message back to the
 				// background script to indicate success or failure.
 
 				// Example (replace with your actual extraction and message passing logic)
 				try {
-					console.log("Extracting listings...");
-
 					const listingData = [];
 
 					// Wait for the listing tiles to load
 					const listingTiles = await waitForNode(".tiles_container .tile", 25);
-					console.log("Number of listings found:", listingTiles.length);
 
 					for (let i = 0; i < listingTiles.length; i++) {
 						const tile = listingTiles.eq(i);
 						const listingURL = tile.find("a.tile__covershot").attr("href");
-						console.log("Listing URL:", listingURL);
 
 						// Open each listing in a new tab (optional, but can be helpful for debugging)
 						// const newTab = await createTabReady(listingURL, false);
@@ -1072,7 +979,6 @@ $(document).ready(async function () {
 
 					port.postMessage({ action: "listingsExtracted", status: "success", listingData: listingData });
 
-					console.log("Extension: Message sent to website194", window);
 					// ... extract listings from the page ...
 					// port.postMessage({ action: "listingsExtracted", status: "success", listings: { rrge: gerg } });
 				} catch (error) {
@@ -1083,7 +989,6 @@ $(document).ready(async function () {
 			if (request.action === "extractFacebookListings") {
 				// 1. Wait for the individual ACTIVE listing divs to load
 
-				console.log("Extracting listings...", "4550");
 				if (extractFacebookListingsInProgress) {
 					return;
 				}
@@ -1094,11 +999,6 @@ $(document).ready(async function () {
 						".x9f619.x1n2onr6.x1ja2u2z.x78zum5.xdt5ytf.x2lah0s.x193iq5w.x1k70j0n.xzueoph.xzboxd6.x14l7nz5",
 						10
 					);
-					// const listings = await waitForNode(
-					// 	".x9f619.x1n2onr6.x1ja2u2z.x78zum5.xdt5ytf.x2lah0s.x193iq5w.x1k70j0n.xzueoph.xzboxd6.x14l7nz5 > div > div > div.tile",
-					// 	10
-					// );
-					console.log("4551", listingsAll);
 
 					let listingLinks = [];
 
@@ -1109,49 +1009,34 @@ $(document).ready(async function () {
 							return $(listing).text().includes("Active");
 						});
 
-						console.log("Listing 455245", listings);
 						// 2. Iterate through each listing div
 						for (let i = 0; i < listings.length; i++) {
 							const listing = listings.eq(i);
-
-							console.log("Listing 4552", i, listing);
 
 							// 1. Modify the selector to match the aria-label conditions. Wait for the "More" button
 							const moreButtonSelector = 'div[aria-label="More"], div[aria-label*="More options for"]';
 							const moreButton = await waitForNode(moreButtonSelector, 5, listing);
 
-							console.log("Listing 4553", i, moreButton);
-
 							if (moreButton && moreButton.length) {
 								// 2. Click the "More" button
 								// moreButton[0].dispatch("click");
 
-								console.log("Listing 4554", i, moreButton);
-
 								// 2. Select the first "More" button
 								const firstMoreButton = moreButton.first();
 
-								console.log("Listing 45542", i, firstMoreButton);
-
 								// 3. Click the first "More" button
 								firstMoreButton.dispatch("click");
-
-								console.log("3554", firstMoreButton);
 
 								const menu = await waitForNode('div[role="menu"]', 15);
 
 								// 3. Wait for the "View Listing" link to appear
 								const viewListingLink = await waitForNode('a[role="menuitem"]:contains("View listing")', 15, menu);
 
-								console.log("Listing 4555", i, viewListingLink);
-
 								if (viewListingLink && viewListingLink.length) {
 									// 4. Extract the href attribute
 									const listingURL = viewListingLink.attr("href");
 									listingLinks.push(listingURL);
-									// await getPoshmarkListingData("https://www.facebook.com/marketplace/item/439829408901317");
-									// console.log(`"View Listing" link found in listing ${i}: ${listingURL}`);
-									// // 5. Simulate pressing the Escape key
+
 									const escapeKeyEvent = new KeyboardEvent("keydown", {
 										bubbles: true,
 										cancelable: true,
@@ -1160,7 +1045,6 @@ $(document).ready(async function () {
 										keyCode: 27,
 									});
 									document.dispatchEvent(escapeKeyEvent);
-									console.log("Escape key pressed.");
 								} else {
 									console.warn(`"View Listing" link not found in listing ${i}`);
 								}
@@ -1168,14 +1052,11 @@ $(document).ready(async function () {
 								console.warn(`"More" button not found in listing ${i}`);
 							}
 						}
-
-						console.log("listingLinks143", listingLinks);
 					}
 
 					const baseURL = "https://www.facebook.com";
 
 					const absoluteLinks = listingLinks.map((link) => `${baseURL}${link}`);
-					console.log("absoluteLinks143", absoluteLinks);
 					port.postMessage({ action: "facebookListingLinksExtracted", status: "success", listingLinks: absoluteLinks });
 				} catch (error) {
 					port.postMessage({ action: "facebooklistingsNotExtracted", status: "error", error: error.message });
@@ -1189,15 +1070,12 @@ $(document).ready(async function () {
 
 			if (request.action === "extractFacebookListingData") {
 				// Start extracting the listing data from the current page
-				console.log("Extracting Facebook listing data from page...");
 
 				try {
 					// 1. Wait for the listing details div to appear
 					const listingDetailsDiv = await waitForNode(".x78zum5.xdt5ytf.x1iyjqo2.x1n2onr6", 10);
 
 					if (listingDetailsDiv.length) {
-						console.log("Listing details div found.", listingDetailsDiv);
-
 						// 2. Extract listing details
 						const title = listingDetailsDiv.find("h1 > span").text().trim();
 						const price = listingDetailsDiv.find('span:contains("₹")').first().text().trim();
@@ -1211,8 +1089,6 @@ $(document).ready(async function () {
 						let imageURLs = [];
 
 						if (imageCarousel.length) {
-							console.log("Image carousel found.");
-
 							const imageThumbnails = await waitForNode('div[aria-label^="Thumbnail"]', 5, imageCarousel);
 
 							// 4. Find all image thumbnails
@@ -1231,7 +1107,6 @@ $(document).ready(async function () {
 								if (fullSizeImage.length) {
 									const imageURL = fullSizeImage.attr("src");
 									imageURLs.push(imageURL);
-									console.log("Extracted image URL:", imageURL);
 								} else {
 									console.warn("Could not find full-size image.");
 								}
@@ -1249,7 +1124,6 @@ $(document).ready(async function () {
 							images: imageURLs,
 							// ... extract other fields as needed ...
 						};
-						console.log("listingData14309", listingData);
 
 						// 3. Send extracted data back to the background script
 						port.postMessage({
@@ -1269,7 +1143,6 @@ $(document).ready(async function () {
 
 			if (request.action === "checkMarketplaceConnectionAndClose") {
 				checkMarketPlaceLoginStatus(request.marketplace).then(() => {
-					console.log("Sending response to background: Data processed");
 					port.postMessage({ status: "Data received and processed" });
 				});
 			}
@@ -1278,8 +1151,6 @@ $(document).ready(async function () {
 
 	// 1. Listen for messages from the background script
 	chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-		console.log("032", request);
-
 		if (request.action === "poshmarkListingsReady") {
 			// 2. Forward the data to your website's JavaScript using window.postMessage
 			window.postMessage(
@@ -1289,12 +1160,9 @@ $(document).ready(async function () {
 				},
 				"*"
 			);
-			console.log("Listing data forwarded to website's main JavaScript.");
 		}
 
 		if (request.action === "facebookListingsReady") {
-			console.log("032", request);
-
 			// 2. Forward the data to your website's JavaScript using window.postMessage
 			window.postMessage(
 				{
@@ -1303,23 +1171,19 @@ $(document).ready(async function () {
 				},
 				"*"
 			);
-			console.log("Listing data forwarded to website's main JavaScript.");
 		}
 
 		if (request.action === "checkPoshmarkConnection") {
-			console.log("7566");
 			// checkPoshmarkLoginStatusAndClose();
 			checkMarketPlaceLoginStatus("poshmark");
 		}
 
 		if (request.action === "checkFacebookConnection") {
-			console.log("7566");
 			// checkFacebookLoginStatusAndClose();
 			checkMarketPlaceLoginStatus("facebook");
 		}
 
 		if (request.action === "marketPlaceLoginStatus") {
-			console.log("7566", request);
 			window.postMessage(
 				{
 					type: "FROM_EXTENSION_MARKETPLACE_LOGIN_STATUS", // Choose a unique type
